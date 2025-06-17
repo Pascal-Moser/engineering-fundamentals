@@ -13,5 +13,5 @@ test("increments count when button is clicked", () => {
   fireEvent.click(button);
 
   // Verify count increments
-  expect(button).toHaveTextContent("count is 1");
+  expect(button).toHaveTextContent("count is 1"); 
 });
