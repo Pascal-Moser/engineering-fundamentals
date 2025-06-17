@@ -113,3 +113,32 @@ jobs:
       - name: Push the Docker image to ACR
         run: |
           docker push pmoregistry.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }} 
+
+      
+  deploy:
+    needs: publish-docker-image
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_RESOURCEGROUP_CONTRIBUTOR_SERVICEPRINICIPAL }}
+
+      - name: Configure Web App to use new image
+        run: |
+          az webapp config container set \
+            --resource-group pmo-lernreise-engineering \
+            --name pmo-test-webapp \
+            --docker-custom-image-name pmoregistry.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }} \
+            --docker-registry-server-url https://pmoregistry.azurecr.io
+
+      - name: Restart Web App
+        run: |
+          az webapp restart \
+            --resource-group pmo-lernreise-engineering \
+            --name pmo-test-webapp
+
+      

@@ -86,17 +86,17 @@ az appservice plan create --name <your-plan-name> --resource-group <your-resourc
 Make sure to specify your resource-group and set a name
 ```bash
 az webapp create \
-     --resource-group <your-resource-groupe-name>  \
-     --plan <your-plan-name> \
-     --name <your-webapp-name> \
-     --deployment-container-image-name <your-container-registry>/ipt-spins:latest
+     --resource-group pmo-lernreise-engineering  \
+     --plan pmo-app-service-plan \
+     --name pmo-test-webapp \
+     --deployment-container-image-name pmoregistry.azurecr.io/pmo-test:0.5.0
 ```
 
 3. A Service Principal in Azure which has the contributor role on your resource
 
 ```bash
-az ad sp create-for-rbac --name "<your-service-principal-name>" --role contributor \
-    --scopes /subscriptions/<subscription-id>/resourceGroups/<resource-group> \
+az ad sp create-for-rbac --name "pmo-sp-webapp" --role contributor \
+    --scopes /subscriptions/da12d467-03ae-4675-aa29-d3b26fdbd2cc/resourceGroups/pmo-lernreise-engineering \
     --sdk-auth
 ```
 Store the returned json as secret in the ``<your-repository> ->Settings->Secrets And Variables->Actions secrets and variables``
