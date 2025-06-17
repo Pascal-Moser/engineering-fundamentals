@@ -52,6 +52,8 @@ jobs:
   publish-docker-image:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      NEW_VERSION: ${{ steps.versioning.outputs.new_version }}
     permissions:
       contents: write
     steps:
@@ -132,7 +134,7 @@ jobs:
           az webapp config container set \
             --resource-group pmo-lernreise-engineering \
             --name pmo-test-webapp \
-            --docker-custom-image-name pmoregistry.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }} \
+            --docker-custom-image-name pmoregistry.azurecr.io/pmo-test:${{ needs.publish-docker-image.outputs.NEW_VERSION }} \
             --docker-registry-server-url https://pmoregistry.azurecr.io
 
       - name: Restart Web App
