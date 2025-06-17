@@ -31,7 +31,6 @@ jobs:
           # -Dsonar.sources=.
 
   test:
-    needs: code-analysis
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -51,7 +50,6 @@ jobs:
 
 
   publish-docker-image:
-    needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
@@ -75,32 +73,41 @@ jobs:
         run: |
           set -e
 
-          # Get latest semver-sorted tag, if any
-          latest_tag=$(git tag --sort=-v:refname | head -n1)
+          # Fetch any tags that might not have come down yet
+          git fetch --tags
+
+          # Find latest semver tag (e.g. "v1.2.3" or "1.2.3")
+          latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           echo "Latest tag: $latest_tag"
 
           if [ -z "$latest_tag" ]; then
-            # No tags yet → use version from package.json
+            # No tags → use version from package.json
             new_tag=$(jq -r .version package.json)
           else
+            # Remove leading "v" if present
+            tag=${latest_tag#v}
+
             # Split into major.minor.patch
-            IFS='.' read -r major minor patch <<< "$latest_tag"
-            # Bump minor by 1 (i.e. +0.1), reset patch to 0
+            IFS='.' read -r major minor patch <<< "$tag"
+
+            # Bump minor by 1, reset patch
             minor=$((minor + 1))
             new_tag="$major.$minor.0"
           fi
 
-          echo "Creating new tag → $new_tag"
+          echo "Computed new tag: $new_tag"
 
-          # Configure git user for the tag commit
+          # Expose for later steps / jobs
+          echo "new_version=$new_tag" >> $GITHUB_OUTPUT
+
+      - name: Push new git tag
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Create and push the tag
-          git tag "$new_tag"
+          git tag "$new_tag"  # or prefix with "v$new_tag" if you like
           git push origin "$new_tag"
-          echo "new_version=$new_tag" >> $GITHUB_OUTPUT
-
+          
       - name: Build the Docker image
         run: |
           docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.new_version }} -t lrengineering.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }} .
