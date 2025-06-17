@@ -99,10 +99,12 @@ jobs:
           # Create and push the tag
           git tag "$new_tag"
           git push origin "$new_tag"
+          echo "new_version=$new_tag" >> $GITHUB_OUTPUT
 
       - name: Build the Docker image
         run: |
-          docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }} -t lrengineering.azurecr.io/ipt-spins:latest .
+          docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.new_version }} -t lrengineering.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }} .
 
       - name: Push the Docker image to ACR
-        run: echo "** TASK B.3 - Push the docker images to the ACR **"
+        run: |
+          docker push pmoregistry.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }}
