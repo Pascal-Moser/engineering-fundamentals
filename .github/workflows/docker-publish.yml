@@ -73,9 +73,32 @@ jobs:
       - name: Generate and Push Git Tag for New Version
         id: versioning
         run: |
-          echo "** TASK B.2 - Generate a new Git tag for the Docker image version. Start with version v0.1 resp. increment existing git tag by 0.1. **"
-          echo "Publish the git tag to the remote repository and store it as an output for subsequent steps. (hint: use GITHUB_OUTPUT)"
-          echo "full_tag=default.tag" >> "$GITHUB_OUTPUT"
+          set -e
+
+          # Get latest semver-sorted tag, if any
+          latest_tag=$(git tag --sort=-v:refname | head -n1)
+          echo "Latest tag: $latest_tag"
+
+          if [ -z "$latest_tag" ]; then
+            # No tags yet → use version from package.json
+            new_tag=$(jq -r .version package.json)
+          else
+            # Split into major.minor.patch
+            IFS='.' read -r major minor patch <<< "$latest_tag"
+            # Bump minor by 1 (i.e. +0.1), reset patch to 0
+            minor=$((minor + 1))
+            new_tag="$major.$minor.0"
+          fi
+
+          echo "Creating new tag → $new_tag"
+
+          # Configure git user for the tag commit
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Create and push the tag
+          git tag "$new_tag"
+          git push origin "$new_tag"
 
       - name: Build the Docker image
         run: |
