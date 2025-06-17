@@ -55,11 +55,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out repository
+      - name: Checkout full history (with tags)
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0            # <— required to see tags
           fetch-tags: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Login to Azure Container Registry
         uses: azure/docker-login@v1
@@ -107,7 +107,7 @@ jobs:
 
           git tag "$new_tag"  # or prefix with "v$new_tag" if you like
           git push origin "$new_tag"
-          
+
       - name: Build the Docker image
         run: |
           docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.new_version }} -t lrengineering.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }} .
