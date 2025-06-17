@@ -107,8 +107,8 @@ jobs:
         uses: azure/docker-login@v1
         with:
           login-server: pmoregistry.azurecr.io  # e.g. myregistry.azurecr.io
-          username:     pmoregistry.azurecr.io # typically the registry name
-          password:     ${{ secrets.REGISTRY_PW }} 
+          username:     967f5f86-77a6-4c25-bb45-aa2f6dd9e794 # typically the registry name
+          password:     ${{ secrets.TEST_PW }} 
 
       - name: Push the Docker image to ACR
         run: |
