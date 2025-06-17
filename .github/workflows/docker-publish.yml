@@ -107,4 +107,4 @@ jobs:
 
       - name: Push the Docker image to ACR
         run: |
-          docker push pmoregistry.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }}
+          docker push pmoregistry.azurecr.io/pmo-test:${{ steps.versioning.outputs.new_version }} 
